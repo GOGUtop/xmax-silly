@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "SillyTavern HarmonyOS shell" },
+    { "name": "EntryAbility_desc", "value": "SillyTavern" },
+    { "name": "EntryAbility_label", "value": "SillyTavern" }
+  ]
+}
