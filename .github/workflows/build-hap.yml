@@ -33,7 +33,7 @@ jobs:
       # Public mirror of HarmonyOS 6.1 command-line tools for CI.
       # You can replace this with your own mirror/object storage URL.
       COMMANDLINE_TOOLS_URL: https://github.com/Okysu/harmony-auto-build/releases/download/commandline-tools-linux-x64-6.1.0.816/commandline-tools-linux-x64-6.1.0.816.zip
-      TOOL_CACHE: ${{ runner.temp }}/harmony-command-line-tools-6.1.0.816
+      TOOL_CACHE: ${{ github.workspace }}/.ci-cache/harmony-command-line-tools-6.1.0.816
       BUILD_MODE: ${{ inputs.build_mode || 'debug' }}
 
     steps:
