@@ -33,7 +33,7 @@ export class BackgroundKeepAlive {
         }],
         actionType: wantAgent.OperationType.START_ABILITY,
         requestCode: 88002,
-        actionFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG],
+        wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG],
       };
       const agent: WantAgent = await wantAgent.getWantAgent(info);
 

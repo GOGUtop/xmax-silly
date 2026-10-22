@@ -21,15 +21,9 @@ export class NotificationService {
     }
 
     try {
-      const slot: notificationManager.NotificationSlot = {
-        type: notificationManager.SlotType.SOCIAL_COMMUNICATION,
-        level: notificationManager.SlotLevel.LEVEL_HIGH,
-        desc: 'SillyTavern AI 回复完成提醒',
-        badgeFlag: true,
-        vibrationEnabled: true,
-        lightEnabled: true,
-      };
-      await notificationManager.addSlot(slot);
+      // API 26: addSlot() 接收 SlotType，而不是 NotificationSlot 对象。
+      // SOCIAL_COMMUNICATION 适合即时消息/AI 回复类提醒。
+      await notificationManager.addSlot(notificationManager.SlotType.SOCIAL_COMMUNICATION);
     } catch (err) {
       const e = err as BusinessError;
       console.warn(`addSlot: ${e.code} ${e.message}`);
@@ -43,7 +37,7 @@ export class NotificationService {
         }],
         actionType: wantAgent.OperationType.START_ABILITY,
         requestCode: 88001,
-        actionFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG],
+        wantAgentFlags: [wantAgent.WantAgentFlags.UPDATE_PRESENT_FLAG],
       };
       this.tapAgent = await wantAgent.getWantAgent(info);
     } catch (err) {

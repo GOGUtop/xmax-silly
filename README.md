@@ -1,3 +1,8 @@
+# HarmonyOS 7 / API 26 GitHub Actions 版
+
+> 本分支已按 HarmonyOS 7.0 / API 26.0.0 调整。GitHub Actions 使用 Command Line Tools 26.0.0.821。
+> 关键兼容修复：Notification `addSlot(SlotType)`、WantAgent `wantAgentFlags`。
+
 # SillyTavern HarmonyOS Shell
 
 这是一个用于 HarmonyOS / HarmonyOS NEXT 的 ArkTS + ArkWeb 壳工程骨架，默认打开：

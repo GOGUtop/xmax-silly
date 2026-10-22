@@ -231,6 +231,9 @@ struct Index {
         .zoomAccess(true)
         .multiWindowAccess(true)
         .mixedMode(MixedMode.All)
+        // H5 <input type="file">：返回 false，交给 ArkWeb 默认文件选择弹窗处理。
+        // SillyTavern 的角色卡、预设、世界书等导入入口可直接调用系统选择器。
+        .onShowFileSelector(() => false)
         .javaScriptProxy({
           object: this.bridge,
           name: AppConfig.BRIDGE_NAME,

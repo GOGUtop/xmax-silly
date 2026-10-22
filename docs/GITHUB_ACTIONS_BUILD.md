@@ -28,9 +28,9 @@ CI 默认生成未签名 HAP。它适合验证“项目是否能编译通过”�
 工程配置：
 
 - modelVersion: `6.1.0`
-- compileSdkVersion: `6.1.0(23)`
-- targetSdkVersion: `6.1.0(23)`
-- compatibleSdkVersion: `6.0.0(20)`
+- compileSdkVersion: `26.0.0`
+- targetSdkVersion: `26.0.0`
+- compatibleSdkVersion: `5.0.0(12)`
 - Node.js: `18.20.1`
 - Java: `17`
 
