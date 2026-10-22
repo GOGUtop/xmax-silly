@@ -69,6 +69,22 @@ jobs:
           echo "HOS_SDK_HOME=${HOS_SDK_HOME:-}"
           echo "OHOS_NDK_HOME=${OHOS_NDK_HOME:-}"
 
+      - name: Verify project API 26 configuration
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "=== root build-profile.json5 ==="
+          cat build-profile.json5
+          echo "=== hvigor/hvigor-config.json5 ==="
+          cat hvigor/hvigor-config.json5
+          if grep -Eq '"compileSdkVersion"[[:space:]]*:[[:space:]]*"?(6\.1\.0\(23\)|23)"?' build-profile.json5; then
+            echo "ERROR: repository still uses API 23 in build-profile.json5" >&2
+            exit 23
+          fi
+          grep -Eq '"compileSdkVersion"[[:space:]]*:[[:space:]]*"26\.0\.0"' build-profile.json5
+          grep -Eq '"targetSdkVersion"[[:space:]]*:[[:space:]]*"26\.0\.0"' build-profile.json5
+          grep -Eq '"modelVersion"[[:space:]]*:[[:space:]]*"26\.0\.0"' hvigor/hvigor-config.json5
+
       - name: Install OHPM dependencies
         shell: bash
         run: |
