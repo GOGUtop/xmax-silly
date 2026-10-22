@@ -1,0 +1,145 @@
+name: Build HarmonyOS HAP
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: Build mode
+        required: true
+        default: debug
+        type: choice
+        options:
+          - debug
+          - release
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ inputs.build_mode || 'debug' }} HAP
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+
+    env:
+      # Public mirror of HarmonyOS 6.1 command-line tools for CI.
+      # You can replace this with your own mirror/object storage URL.
+      COMMANDLINE_TOOLS_URL: https://github.com/Okysu/harmony-auto-build/releases/download/commandline-tools-linux-x64-6.1.0.816/commandline-tools-linux-x64-6.1.0.816.zip
+      TOOL_CACHE: ${{ runner.temp }}/harmony-command-line-tools-6.1.0.816
+      BUILD_MODE: ${{ inputs.build_mode || 'debug' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.1'
+
+      - name: Cache HarmonyOS command-line tools
+        id: cache-tools
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.TOOL_CACHE }}
+          key: harmonyos-cli-linux-6.1.0.816-v1
+
+      - name: Download HarmonyOS command-line tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$TOOL_CACHE"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/harmony-tools.zip" "$COMMANDLINE_TOOLS_URL"
+          unzip -q "$RUNNER_TEMP/harmony-tools.zip" -d "$TOOL_CACHE"
+          rm -f "$RUNNER_TEMP/harmony-tools.zip"
+
+      - name: Configure HarmonyOS toolchain
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          TOOL_HOME="$(find "$TOOL_CACHE" -maxdepth 3 -type d -name command-line-tools | head -n 1)"
+          if [ -z "$TOOL_HOME" ]; then
+            # Some archives unpack their contents directly into the destination directory.
+            if [ -d "$TOOL_CACHE/hvigor" ] || [ -d "$TOOL_CACHE/bin" ]; then
+              TOOL_HOME="$TOOL_CACHE"
+            else
+              echo "Could not locate command-line-tools under $TOOL_CACHE"
+              find "$TOOL_CACHE" -maxdepth 3 -type d -print
+              exit 1
+            fi
+          fi
+
+          echo "TOOL_HOME=$TOOL_HOME" >> "$GITHUB_ENV"
+          echo "DEVECO_SDK_HOME=$TOOL_HOME/sdk" >> "$GITHUB_ENV"
+
+          for dir in \
+            "$TOOL_HOME/bin" \
+            "$TOOL_HOME/hvigor/bin" \
+            "$TOOL_HOME/ohpm/bin" \
+            "$TOOL_HOME/tool/node/bin"; do
+            if [ -d "$dir" ]; then
+              echo "$dir" >> "$GITHUB_PATH"
+            fi
+          done
+
+      - name: Verify toolchain
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "DEVECO_SDK_HOME=$DEVECO_SDK_HOME"
+          command -v hvigorw
+          command -v ohpm
+          hvigorw --version
+          ohpm --version
+          test -d "$DEVECO_SDK_HOME"
+
+      - name: Install OHPM dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ohpm config set registry https://ohpm.openharmony.cn/ohpm/ || true
+          ohpm install --all
+
+      - name: Build HAP
+        shell: bash
+        run: |
+          set -euxo pipefail
+          hvigorw clean --no-daemon || true
+          hvigorw assembleHap \
+            --mode module \
+            -p product=default \
+            -p module=entry@default \
+            -p buildMode="$BUILD_MODE" \
+            --no-daemon \
+            --stacktrace
+
+      - name: Show build outputs
+        if: always()
+        shell: bash
+        run: |
+          find entry/build -type f \( -name '*.hap' -o -name '*.app' \) -print 2>/dev/null || true
+
+      - name: Upload HAP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SillyTavern-HarmonyOS-${{ env.BUILD_MODE }}-${{ github.run_number }}
+          path: |
+            entry/build/**/*.hap
+          if-no-files-found: error
+          retention-days: 14
